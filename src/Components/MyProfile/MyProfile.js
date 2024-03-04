@@ -1,7 +1,12 @@
 import React, { useState } from "react";
-import { Grid, Typography, Avatar, Box, Button, IconButton } from "@mui/material";
+import {
+  Grid,
+  Typography,
+  Avatar,
+  Box,
+  Button,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import Sidebar from "../Sidebar/Sidebar";
 
 const MyProfile = () => {
@@ -15,9 +20,9 @@ const MyProfile = () => {
     const file = e.target.files[0];
     const reader = new FileReader();
     reader.onloadend = () => {
-      setFile(reader.result);
       setImageUploaded(true);
     };
+    setFile(e.target.files[0]);
     reader.readAsDataURL(file);
   };
 
@@ -25,12 +30,14 @@ const MyProfile = () => {
     e.preventDefault();
     try {
       const formData = new FormData();
+      console.log(file);
       formData.append("file_path", file);
       formData.append("name", name);
       formData.append("description", description);
       let result = await fetch("http://localhost:8000/api/addPost", {
         method: "POST",
         body: formData,
+
       });
       console.log(result);
       if (result.ok) {
@@ -87,40 +94,40 @@ const MyProfile = () => {
             ))}
           </ul>
           <form onSubmit={addPost}>
-          <input
-  type="file"
-  className="form-control"
-  onChange={handleImageUpload}
-  placeholder="add file"
-/>
+            <input
+              type="file"
+              className="form-control"
+              onChange={handleImageUpload}
+              placeholder="add file"
+            />
 
             <br />
             <br />
-           
-              <>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Write title for your post"
-                />
-              
-                <br />
-                <input
-                  type="text"
-                  className="form-control"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Write description"
-                />
-                <br />
-                <br />
-                <Button variant="contained" type="submit">
-                  Add Post
-                </Button>
-                <br />
-              </>
+
+            <>
+              <input
+                type="text"
+                className="form-control"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Write title for your post"
+              />
+
+              <br />
+              <input
+                type="text"
+                className="form-control"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Write description"
+              />
+              <br />
+              <br />
+              <Button variant="contained" type="submit">
+                Add Post
+              </Button>
+              <br />
+            </>
           </form>
         </Grid>
       </Grid>

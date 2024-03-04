@@ -15,13 +15,13 @@ const Post = ({ title, caption }) => {
   const handleLike = () => {
     setLiked(true);
     setLikeCount(likeCount + 1);
-    // Send a request to the backend to update the like count
+    //  like count
   };
 
   const handleUnlike = () => {
     setLiked(false);
     setLikeCount(likeCount - 1);
-    // Send a request to the backend to update the like count
+    // unlike count
   };
 
   const handleComment = () => {

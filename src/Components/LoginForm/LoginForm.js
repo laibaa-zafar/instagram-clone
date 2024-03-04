@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import './LoginForm.css';
-import { Link, useNavigate } from 'react-router-dom';
+import "./LoginForm.css";
+import { Link, useNavigate } from "react-router-dom";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -16,27 +16,18 @@ const LoginForm = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
+      const data = await response.json(email, password);
 
       if (!response.ok) {
         throw new Error("Failed to login");
       }
-
-      const data = await response.json();
-      console.log("Login successful. Token:", data.token);
-
-      
+      localStorage.setItem("user-info", JSON.stringify(data));
       setEmail("");
       setPassword("");
       setError("");
-
-     
-      navigate("/sidebar");
-
+      navigate("/postsfunctionality");
     } catch (error) {
       console.error("Login error:", error.message);
       setError("Failed to login. Please check your credentials.");
@@ -46,16 +37,16 @@ const LoginForm = () => {
   return (
     <div className="login-form">
       <div className="writing">
-        <img src= "./Images/instagramwriting.png" alt="" />
+        <img src="./Images/instagramwriting.png" alt="" />
       </div>
       <div className="logo">
-        <img src= "./Images/instalogo.png" alt="" />
+        <img src="./Images/instalogo.png" alt="" />
       </div>
       <h2>Login</h2>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
         <label>
-          Email or Username: <br/>
+          Email or Username: <br />
           <input
             type="email"
             value={email}
@@ -64,7 +55,7 @@ const LoginForm = () => {
           />
         </label>
         <label>
-          Password: <br/>
+          Password: <br />
           <input
             type="password"
             value={password}
