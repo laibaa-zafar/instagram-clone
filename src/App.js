@@ -4,7 +4,7 @@ import LoginForm from "./Components/LoginForm/LoginForm.js";
 import SignupForm from "./Components/SignupForm/SignupForm.js";
 import Sidebar from "./Components/Sidebar/Sidebar.js";
 import MyProfile from "./Components/MyProfile/MyProfile.js";
-import PostsFunctionality from "./Components/PostsFunctionality/PostsFunctionality.js";
+import PostList from "./Components/PostList/PostList.js";
 import { Login } from "@mui/icons-material";
 
 function ProtectedRoute({ element, isLoggedIn }) {
@@ -26,8 +26,8 @@ function App() {
           <>
             <Route path="/sidebar" element={<Sidebar />} />
             <Route
-              path="/postsfunctionality"
-              element={<PostsFunctionality />}
+              path="/postslist"
+              element={<PostList />}
             />
             <Route path="/myprofile" element={<MyProfile />} />
           </>

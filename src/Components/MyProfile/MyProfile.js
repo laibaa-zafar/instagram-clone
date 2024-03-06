@@ -1,68 +1,87 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Grid,
   Typography,
   Avatar,
   Box,
   Button,
+  IconButton,
+  TextField
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../Sidebar/Sidebar";
+import { Card, Col, Row } from "react-bootstrap";
+import { FaHeart, FaComment } from "react-icons/fa";
 
 const MyProfile = () => {
-  const [imageUploaded, setImageUploaded] = useState(false);
-  const [name, setName] = useState("");
-  const [file, setFile] = useState("");
-  const [description, setDescription] = useState("");
-  const navigate = useNavigate();
+  const [data, setData] = useState([]);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImageUploaded(true);
-    };
-    setFile(e.target.files[0]);
-    reader.readAsDataURL(file);
-  };
-
-  const addPost = async (e) => {
-    e.preventDefault();
-    try {
-      const formData = new FormData();
-      console.log(file);
-      formData.append("file_path", file);
-      formData.append("name", name);
-      formData.append("description", description);
-      let result = await fetch("http://localhost:8000/api/addPost", {
-        method: "POST",
-        body: formData,
-
-      });
-      console.log(result);
-      if (result.ok) {
-        alert("Data has been saved");
-        setName("");
-        setFile("");
-        setDescription("");
-        setImageUploaded(false);
-      } else {
-        console.error("Failed to save data:", result.statusText);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        let result = await fetch("http://localhost:8000/api/index");
+        result = await result.json();
+        setData(result.posts);
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to save data. Please try again.");
-    }
+    };
+
+    const intervalId = setInterval(fetchData, 2000);
+
+    return () => clearInterval(intervalId);
+
+  }, []);
+
+  const handleLike = (postId) => {
+    // Handle like logic
+    console.log("Liked post with ID:", postId);
   };
 
-  const user = {
-    username: "example_user",
-    bio: "This is a sample bio.",
-    posts: [
-      { id: 1, title: "Post 1" },
-      { id: 2, title: "Post 2" },
-      { id: 3, title: "Post 3" },
-    ],
+  const handleUnlike = (postId) => {
+    // Handle unlike logic
+    console.log("Unliked post with ID:", postId);
+  };
+
+  const renderPosts = () => {
+    return data.map((post) => (
+      <Col md={6} key={`post_${post.id}`}>
+        <Card style={{ marginBottom: "20px" }}>
+          <Card.Img
+            variant="top"
+            style={{ borderRadius: "15px" }}
+            src={`http://localhost:8000/${post.file_path}`}
+            alt={post.name}
+          />
+          <Card.Body>
+            <Card.Title>{post.name}</Card.Title>
+            <Card.Text>{post.description}</Card.Text>
+            <Box display="flex" alignItems="center">
+              <IconButton onClick={() => handleLike(post.id)}>
+                <FaHeart />
+              </IconButton>
+              <span>0</span>
+              <IconButton onClick={() => handleUnlike(post.id)}>
+                <FaHeart />
+              </IconButton>
+              <IconButton>
+                <FaComment />
+              </IconButton>
+            </Box>
+            <TextField
+              label="Add a comment"
+              variant="outlined"
+              size="small"
+              fullWidth
+              margin="normal"
+            />
+            <Button variant="contained" fullWidth>
+              Comment
+            </Button>
+          </Card.Body>
+        </Card>
+      </Col>
+    ));
   };
 
   return (
@@ -79,56 +98,16 @@ const MyProfile = () => {
           <Box display="flex" alignItems="center" marginBottom={2}>
             <Avatar sx={{ width: 80, height: 80 }} />
             <Typography variant="h4" marginLeft={2}>
-              {user.username}
+              User Name
             </Typography>
           </Box>
           <Typography variant="body1" marginBottom={2}>
-            {user.bio}
+            This is a sample bio.
           </Typography>
           <Typography variant="h5" marginBottom={1}>
             Posts
           </Typography>
-          <ul>
-            {user.posts.map((post) => (
-              <li key={post.id}>{post.title}</li>
-            ))}
-          </ul>
-          <form onSubmit={addPost}>
-            <input
-              type="file"
-              className="form-control"
-              onChange={handleImageUpload}
-              placeholder="add file"
-            />
-
-            <br />
-            <br />
-
-            <>
-              <input
-                type="text"
-                className="form-control"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Write title for your post"
-              />
-
-              <br />
-              <input
-                type="text"
-                className="form-control"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Write description"
-              />
-              <br />
-              <br />
-              <Button variant="contained" type="submit">
-                Add Post
-              </Button>
-              <br />
-            </>
-          </form>
+          <Row>{renderPosts()}</Row>
         </Grid>
       </Grid>
     </>
