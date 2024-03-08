@@ -1,20 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { Grid, Typography, Avatar, Box, Button, IconButton, TextField } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import {
+  Grid,
+  Typography,
+  Avatar,
+  Box,
+  Button,
+  IconButton,
+  TextField,
+} from "@mui/material";
 import Sidebar from "../Sidebar/Sidebar";
 import { Card, Col, Row } from "react-bootstrap";
 import { FaHeart, FaComment } from "react-icons/fa";
 
 const MyProfile = () => {
   const [data, setData] = useState([]);
+  const [comments, setComments] = useState([]);
   const userId = 8;
   const [commentContent, setCommentContent] = useState("");
+  const [newComment, setNewComment] = useState("");
 
   const fetchData = async () => {
     try {
       let result = await fetch("http://localhost:8000/api/index");
       result = await result.json();
       setData(result.posts);
+
+      try {
+        let result = await fetch("http://localhost:8000/api/getComments");
+        result = await result.json();
+        setComments(result.comments);
+        console.log(result);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -31,7 +49,6 @@ const MyProfile = () => {
   const handleLike = (postid) => {
     if (userId) {
       console.log("Liked post with ID:", postid);
-      
     } else {
       console.log("User is not logged in.");
     }
@@ -47,9 +64,6 @@ const MyProfile = () => {
 
   const handleComment = async (postid, content, id) => {
     try {
-      console.log(postid)
-      console.log(id)
-      console.log(commentContent)
       const response = await fetch("http://localhost:8000/api/store", {
         method: "POST",
         headers: {
@@ -61,12 +75,12 @@ const MyProfile = () => {
           content: content,
         }),
       });
-      
+
       if (response.ok) {
         console.log("Comment saved successfully.");
-        setCommentContent("");
-        fetchData();
-        console.log("commentset")
+        setNewComment(content); 
+        setCommentContent(""); 
+        fetchData(); 
       } else {
         console.error("Failed to save comment.");
       }
@@ -74,8 +88,6 @@ const MyProfile = () => {
       console.error("Error saving comment:", error);
     }
   };
-  
-  
 
   const renderPosts = () => {
     return data.map((post) => (
@@ -94,9 +106,7 @@ const MyProfile = () => {
               <IconButton onClick={() => handleLike(post.id)}>
                 <FaHeart />
               </IconButton>
-              <span>
-                
-              </span>
+              <span></span>
               <IconButton onClick={() => handleUnlike(post.id)}>
                 <FaHeart />
               </IconButton>
@@ -104,21 +114,38 @@ const MyProfile = () => {
                 <FaComment />
               </IconButton>
             </Box>
+            {/* Display comments */}
+            {comments
+              .filter((comment) => comment.post_id === post.id)
+              .map((comment) => (
+                <Typography key={`comment_${comment.id}`} variant="body2">
+                  {comment.content}
+                </Typography>
+              ))}
             <TextField
-  label="Add a comment"
-  variant="outlined"
-  size="small"
-  fullWidth
-  margin="normal"
-  value={commentContent} // Use the state variable here
-  onChange={(e) => setCommentContent(e.target.value)} // Update the state variable
-  onKeyDown={(e) => {
-    if (e.key === 'Enter') {
-      handleComment(post.id, commentContent, userId); // Use commentContent here
-      setCommentContent(''); // Reset the state variable
-    }
-  }}
-/>
+              label="Add a comment"
+              variant="outlined"
+              size="small"
+              fullWidth
+              margin="normal"
+              value={commentContent}
+              onChange={(e) => setCommentContent(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleComment(post.id, commentContent, userId);
+                }
+              }}
+            />
+            {comments
+              .filter((comment) => comment.postid === post.id)
+              .map((comment) => (
+                <Typography key={`comment_${comment.id}`} variant="body2">
+                  {comment.content}
+                </Typography>
+              ))}
+            {newComment && (
+              <Typography variant="body2">{newComment}</Typography>
+            )}
             <Button
               variant="contained"
               fullWidth
