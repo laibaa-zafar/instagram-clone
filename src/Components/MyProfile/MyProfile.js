@@ -8,61 +8,127 @@ import {
   IconButton,
   TextField,
 } from "@mui/material";
-import Sidebar from "../Sidebar/Sidebar";
 import { Card, Col, Row } from "react-bootstrap";
 import { FaHeart, FaComment } from "react-icons/fa";
 
 const MyProfile = () => {
   const [data, setData] = useState([]);
   const [comments, setComments] = useState([]);
-  const userId = 8;
+  const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
   const [commentContent, setCommentContent] = useState("");
   const [newComment, setNewComment] = useState("");
 
   const fetchData = async () => {
     try {
-      let result = await fetch("http://localhost:8000/api/index");
-      result = await result.json();
-      setData(result.posts);
+      // Fetching all posts
+      let postsResponse = await fetch("http://localhost:8000/api/index");
+      let postsResult = await postsResponse.json();
+      setData(postsResult.posts);
 
-      try {
-        let result = await fetch("http://localhost:8000/api/getComments");
-        result = await result.json();
-        setComments(result.comments);
-        console.log(result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
+      // Fetching all comments
+      let commentsResponse = await fetch("http://localhost:8000/api/getComments");
+      let commentsResult = await commentsResponse.json();
+      setComments(commentsResult.comments);
+
+      // Fetching like status
+      let likeStatusPromises = postsResult.posts.map(post =>
+        fetch(`http://localhost:8000/api/likeStatus`)
+          .then(response => response.json())
+      );
+      let likeStatuses = await Promise.all(likeStatusPromises);
+
+      // Combine like status with posts data
+      setData(prevData => prevData.map((post, index) => ({
+        ...post,
+        isLiked: likeStatuses[index].isLiked,
+        totalLikes: likeStatuses[index].totalLikes,
+        totalUnlikes: likeStatuses[index].totalUnlikes
+      })));
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
   useEffect(() => {
+    const storedUserInfo = localStorage.getItem('user-info');
+    if (storedUserInfo) {
+      const userInfo = JSON.parse(storedUserInfo);
+      setUserId(userInfo.id);
+      setUsername(userInfo.username);
+      console.log(storedUserInfo)
+    }
     fetchData();
-
-    const intervalId = setInterval(fetchData, 2000);
-
-    return () => clearInterval(intervalId);
   }, []);
+  
 
-  const handleLike = (postid) => {
-    if (userId) {
-      console.log("Liked post with ID:", postid);
-    } else {
-      console.log("User is not logged in.");
+  const handleLike = async (postid) => {
+    try {
+      if (!userId || !username) {
+        console.log("User is not logged in.");
+        return;
+      }
+  
+      // Check if the user has already liked the post
+      const likeStatusResponse = await fetch(`http://localhost:8000/api/likeStatus?postid=${postid}&id=${userId}`);
+      const likeStatusData = await likeStatusResponse.json();
+      if (likeStatusResponse.ok && likeStatusData.isLiked) {
+        console.log("User has already liked the post.");
+        return;
+      }
+  
+      // Insert a new like if the user has not already liked the post
+      const response = await fetch(`http://localhost:8000/api/likePost`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          postid: postid,
+          id: userId,
+        }),
+      });
+  
+      if (response.ok) {
+        console.log("Liked post with ID:", postid);
+        fetchData();
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to like post:", errorData.message);
+      }
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
+  
+  
+  const handleUnlike = async (postid, id, username) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/unlikePost`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: id,
+          username: username,
+          postid: postid,
+        }),
+      });
+
+      if (response.ok) {
+        console.log("Unliked post with ID:", postid);
+        fetchData();
+      } else {
+        console.error("Failed to unlike post.");
+      }
+    } catch (error) {
+      console.error("Error unliking post:", error);
     }
   };
 
-  const handleUnlike = (postId) => {
-    if (userId) {
-      console.log("Unliked post with ID:", postId);
-    } else {
-      console.log("User is not logged in.");
-    }
-  };
-
-  const handleComment = async (postid, content, id) => {
+  const handleComment = async (postid) => {
     try {
       const response = await fetch("http://localhost:8000/api/store", {
         method: "POST",
@@ -71,16 +137,16 @@ const MyProfile = () => {
         },
         body: JSON.stringify({
           postid: postid,
-          id: id,
-          content: content,
+          id: userId,
+          content: commentContent,
         }),
       });
 
       if (response.ok) {
         console.log("Comment saved successfully.");
-        setNewComment(content); 
-        setCommentContent(""); 
-        fetchData(); 
+        setNewComment(commentContent);
+        setCommentContent("");
+        fetchData();
       } else {
         console.error("Failed to save comment.");
       }
@@ -106,7 +172,7 @@ const MyProfile = () => {
               <IconButton onClick={() => handleLike(post.id)}>
                 <FaHeart />
               </IconButton>
-              <span></span>
+              <span>{post.likes}</span>
               <IconButton onClick={() => handleUnlike(post.id)}>
                 <FaHeart />
               </IconButton>
@@ -132,14 +198,15 @@ const MyProfile = () => {
               onChange={(e) => setCommentContent(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  handleComment(post.id, commentContent, userId);
+                  handleComment(post.id);
                 }
               }}
             />
             {comments
-              .filter((comment) => comment.postid === post.id)
+              .filter((comment) => comment.post_id === post.id)
               .map((comment) => (
-                <Typography key={`comment_${comment.id}`} variant="body2">
+                <Typography key={`comment_${post.id}_${comment.id}`} variant="body2">
+                  <strong>{comment.username}: </strong>
                   {comment.content}
                 </Typography>
               ))}
@@ -149,7 +216,7 @@ const MyProfile = () => {
             <Button
               variant="contained"
               fullWidth
-              onClick={() => handleComment(post.id, commentContent, userId)}
+              onClick={() => handleComment(post.id)}
             >
               Comment
             </Button>
@@ -161,19 +228,12 @@ const MyProfile = () => {
 
   return (
     <>
-      <Sidebar />
-      <Grid
-        container
-        justifyContent="center"
-        alignItems="flex-start"
-        spacing={2}
-        marginLeft={30}
-      >
+      <Grid container justifyContent="center" alignItems="flex-start" spacing={2} marginLeft={30}>
         <Grid item xs={12} md={6}>
           <Box display="flex" alignItems="center" marginBottom={2}>
             <Avatar sx={{ width: 80, height: 80 }} />
             <Typography variant="h4" marginLeft={2}>
-              User Name
+              {username}
             </Typography>
           </Box>
           <Typography variant="body1" marginBottom={2}>

@@ -6,23 +6,64 @@ import CommentIcon from "@mui/icons-material/Comment";
 import OutboxIcon from "@mui/icons-material/Outbox";
 import Sidebar from "../Sidebar/Sidebar";
 
-const Post = ({ title, caption }) => {
+const Post = ({ title, caption, id, postid, username }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
 
-  const handleLike = () => {
-    setLiked(true);
-    setLikeCount(likeCount + 1);
-    //  like count
+  // handle like function .. 
+  const handleLike = async (postid, id, username) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/likePost/${postid}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            postid: postid,
+            id: id,
+            username: username,
+          }),
+        }
+      );
+      const result = await response.json();
+      if (result.success) {
+        setLiked(true);
+        setLikeCount(likeCount + 1);
+        // console.log(response);
+      } else {
+        console.error("Failed to like post:", result.message);
+      }
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
   };
-
-  const handleUnlike = () => {
-    setLiked(false);
-    setLikeCount(likeCount - 1);
-    // unlike count
-  };
+  // handle unlike function
+  // const handleUnlike = async (postId) => {
+  //   try {
+  //     const response = await fetch(`http://localhost:8000/api/unlikePost/${postId}`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         liked: false,
+  //       }),
+  //     });
+  //     const result = await response.json();
+  //     if (result.success) {
+  //       setLiked(false);
+  //       setLikeCount(likeCount - 1);
+  //     } else {
+  //       console.error("Failed to unlike post:", result.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error unliking post:", error);
+  //   }
+  // };
 
   const handleComment = async (postid, id, content) => {
     try {
@@ -32,7 +73,7 @@ const Post = ({ title, caption }) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-         postid: postid,
+          postid: postid,
           id: id,
           content: content,
         }),
@@ -48,7 +89,6 @@ const Post = ({ title, caption }) => {
       console.error("Error saving comment:", error);
     }
   };
-  
 
   return (
     <div style={{ marginLeft: "28rem", marginTop: "4rem" }}>
@@ -60,7 +100,7 @@ const Post = ({ title, caption }) => {
       />
       <Typography variant="body1">{caption}</Typography>
       <div>
-        <IconButton onClick={liked ? handleUnlike : handleLike}>
+        <IconButton onClick={() => handleLike (postid, id, username)}>
           {liked ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
         </IconButton>
         <span>{likeCount}</span>
@@ -107,7 +147,9 @@ const PostsPage = () => {
         const result = await response.json();
         setData(result.posts);
 
-        const commentsResponse = await fetch("http://localhost:8000/api/getComments");
+        const commentsResponse = await fetch(
+          "http://localhost:8000/api/getComments"
+        );
         const commentsResult = await commentsResponse.json();
         setComments(commentsResult.comments);
       } catch (error) {
@@ -131,7 +173,12 @@ const PostsPage = () => {
         }}
       >
         {data.map((post) => (
-          <Post key={post.id} title={post.title} caption={post.caption} />
+          <Post
+            key={post.id}
+            title={post.title}
+            caption={post.caption}
+            postid={post.postid}
+          />
         ))}
       </div>
     </>

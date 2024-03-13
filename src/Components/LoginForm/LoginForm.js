@@ -27,7 +27,7 @@ const LoginForm = () => {
       setEmail("");
       setPassword("");
       setError("");
-      navigate("/postsfunctionality");
+      navigate("/postslist");
     } catch (error) {
       console.error("Login error:", error.message);
       setError("Failed to login. Please check your credentials.");
