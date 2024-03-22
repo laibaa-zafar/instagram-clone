@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./LoginForm.css";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -7,6 +7,23 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const isLoggedIn = useState();
+
+  // useEffect(() => {
+  //   const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+  //   if (loggedIn) {
+  //     navigate("/homepage");
+  //   }
+  // }, [navigate]);
+
+  useEffect(() => {
+    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+    if (loggedIn) {
+      navigate("/homepage");
+    } else {
+      navigate("/");
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,15 +36,16 @@ const LoginForm = () => {
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
-        console.log(data);
+      console.log(data);
       if (!response.ok) {
         throw new Error("Failed to login");
       }
       localStorage.setItem("user-info", JSON.stringify(data));
+      localStorage.setItem("isLoggedIn", "true");
       setEmail("");
       setPassword("");
       setError("");
-      navigate("/postslist");
+      navigate("/homepage");
     } catch (error) {
       console.error("Login error:", error.message);
       setError("Failed to login. Please check your credentials.");

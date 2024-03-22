@@ -24,8 +24,12 @@ const Sidebar = () => {
 
   const handleConfirmLogout = () => {
     setOpenDialog(false);
-    navigate("/");
-  };
+    localStorage.removeItem("user-info");
+    localStorage.removeItem("UserInfo");
+    localStorage.setItem("isLoggedIn", "false"); 
+    navigate ("/");
+};
+
 
   const handleCloseDialog = () => {
     setOpenDialog(false);

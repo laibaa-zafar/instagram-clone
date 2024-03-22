@@ -25,11 +25,9 @@ const SignupForm = () => {
         }),
       });
       if (response.ok) {
-        // Handle successful signup
         console.log('Signup successful');
-        navigate('/sidebar'); // Redirect to the sidebar page
+        navigate("/"); 
       } else {
-        // Handle failed signup
         console.error('Signup failed');
       }
     } catch (error) {
@@ -62,7 +60,7 @@ const SignupForm = () => {
         <label>
           User name:
           <input
-            type="text" // Changed from "username"
+            type="text" 
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
