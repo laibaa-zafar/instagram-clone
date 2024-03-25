@@ -275,16 +275,16 @@ const MyProfile = () => {
       >
         <Grid item xs={12} md={6}>
           <Box display="flex" alignItems="center" marginBottom={2}>
-            <Avatar sx={{ width: 80, height: 80 }} />
+            {/* <Avatar sx={{ width: 80, height: 80 }} />
             <Typography variant="h4" marginLeft={2}>
               {username}
-            </Typography>
+            </Typography> */}
           </Box>
-          <Typography variant="body1" marginBottom={2}>
+          {/* <Typography variant="body1" marginBottom={2}>
             This is a sample bio.
-          </Typography>
-          <Typography variant="h5" marginBottom={1}>
-            Posts
+          </Typography> */}
+          <Typography variant="h3" marginBottom={1}>
+           Home Page
           </Typography>
           <Row>{renderPosts()}</Row>
         </Grid>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './UserProfile.css'; 
 import Sidebar from '../Sidebar/Sidebar';
-import HomePage from '../Homepage/HomePage';
 
 const UserProfile = () => {
   const [username, setUsername] = useState('');
@@ -17,10 +16,23 @@ const UserProfile = () => {
     if (storedUserInfo) {
       const userInfo = JSON.parse(storedUserInfo);
       setUsername(userInfo.username);
-      setBio(userInfo.bio || ''); 
-      setAvatarUrl(userInfo.avatarUrl || ''); 
+      setBio(userInfo.bio || '');
+      setAvatarUrl(userInfo.avatarUrl || '');
+      fetchUserPosts(userInfo.id); 
     }
   }, []);
+  
+
+  const fetchUserPosts = async (userId) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/index/${userId}`);
+      const result = await response.json();
+      setData(result.posts);
+    } catch (error) {
+      console.error('Error fetching user posts:', error);
+    }
+  };
+  
 
   const handleBioChange = (event) => {
     setBio(event.target.value);
@@ -36,16 +48,17 @@ const UserProfile = () => {
   };
 
   const handleUpload = () => {
-    console.log('File:', file);
+    console.log('file:', file);
     console.log('Description:', description);
+   
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    const storedUserInfo = localStorage.getItem('userInfo');
+    const storedUserInfo = localStorage.getItem('user-info');
     if (storedUserInfo){
         const userInfo = JSON.parse(storedUserInfo);
-        localStorage.setItem('userInfo', JSON.stringify({...userInfo, bio}));
+        localStorage.setItem('user-info', JSON.stringify({...userInfo, bio}));
         setEditingBio(false); 
     }
   };
@@ -55,7 +68,7 @@ const UserProfile = () => {
       <Sidebar />
       <h1 className="welcome-message">Welcome, {username}!</h1>
       <div className="profile-header">
-        <img src="./Images/avatar.png" alt="Avatar" className="avatar" />
+        <img src={avatarUrl || './Images/avatar.png'} alt="Avatar" className="avatar" />
         <h2 className="username">{username}</h2>
         {editingBio ? (
           <form onSubmit={handleSubmit} className="bio-form">
@@ -71,7 +84,16 @@ const UserProfile = () => {
           <p onClick={() => setEditingBio(true)}>{bio}</p>
         )}
       </div>
-      <HomePage/>
+      <div className="posts-container">
+        {data.map((post) => (
+          <div key={post.id} className="post-card">
+            <h3 className="post-username">{post.username}</h3>
+            <img src={`http://localhost:8000/${post.file_path}`} alt={post.title} className="post-image" />
+            <h3 className="post-title">{post.name}</h3>
+            <p className="post-description">{post.description}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

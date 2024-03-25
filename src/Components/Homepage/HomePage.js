@@ -42,6 +42,7 @@ const HomePage = () => {
   const [name, setName] = useState("");
   const [file, setFile] = useState("");
   const [description, setDescription] = useState("");
+  const [id, setId] = useState("");
   const navigate = useNavigate();
 
   const handleImageUpload = (e) => {
@@ -56,16 +57,23 @@ const HomePage = () => {
 
   const addPost = async (e) => {
     e.preventDefault();
+    
     try {
+      const storedUserInfo = localStorage.getItem('user-info');
+      if (!storedUserInfo) {
+        console.error('User info not found in local storage');
+        return;
+      }
+      const userInfo = JSON.parse(storedUserInfo);
       const formData = new FormData();
-      console.log(file);
       formData.append("file_path", file);
       formData.append("name", name);
       formData.append("description", description);
+      formData.append("id", userInfo.id); // Include user ID in the form data
+  
       let result = await fetch("http://localhost:8000/api/addPost", {
         method: "POST",
         body: formData,
-
       });
       console.log(result);
       if (result.ok) {
@@ -82,6 +90,7 @@ const HomePage = () => {
       alert("Failed to save data. Please try again.");
     }
   };
+  
 
   const handleDeletePost = async (postId) => {
     try {
@@ -127,9 +136,8 @@ const HomePage = () => {
       <Grid
         container
         justifyContent="center"
-        alignItems="flex-start"
-        spacing={2}
-        marginLeft={30}
+        alignItems="center"
+        style={{ minHeight: "100vh" }}
       >
         <Grid item xs={12} md={6}>
           <form onSubmit={addPost}>
@@ -168,55 +176,6 @@ const HomePage = () => {
           </form>
         </Grid>
       </Grid>
-      <div
-        className="container"
-        style={{ margin: "200px auto", width: "50px", height: "20px" }}
-      >
-        <Row>
-        {data.map((post) => (
-          
-          
-  <Col md={6} key={`post_${post.id}`}>
-    <Card style={{ marginBottom: "20px" }}>
-      <Card.Img
-        variant="top"
-        style={{ borderRadius: "15px", width: 350, height: 500 }} // Set width to 100% and height to auto
-        src={`http://localhost:8000/${post.file_path}`}
-        alt={post.name}
-      />
-      <Card.Body>
-        <Card.Title>{post.name}</Card.Title>
-        <Card.Text>{post.description}</Card.Text>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <Button variant="light" style={{ marginRight: "5px" }}>
-            <FaHeart /> Like
-          </Button>
-          <Button variant="light" style={{ marginRight: "5px" }}>
-            <FaComment /> Comment
-          </Button>
-          <IconButton
-            aria-label="options"
-            onClick={(event) => handleMenuClick(event, post.id)}
-            style={{ padding: "5px" }}
-          >
-            <FaEllipsisV />
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl) && selectedPostId === post.id}
-            onClose={handleMenuClose}
-          >
-            <MenuItem onClick={() => {}}>Update Post</MenuItem>
-            <MenuItem onClick={() => handleDeletePost(post.id)}>Delete Post</MenuItem>
-          </Menu>
-        </div>
-        <div>{/* Display comments here */}</div>
-      </Card.Body>
-    </Card>
-  </Col>
-))}
-        </Row>
-      </div>
     </>
   );
 };

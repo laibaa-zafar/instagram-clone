@@ -24,6 +24,7 @@ const SignupForm = () => {
           confirmPassword,
         }),
       });
+      console.log(response)
       if (response.ok) {
         console.log('Signup successful');
         navigate("/"); 

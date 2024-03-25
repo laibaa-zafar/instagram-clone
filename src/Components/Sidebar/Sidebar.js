@@ -26,10 +26,9 @@ const Sidebar = () => {
     setOpenDialog(false);
     localStorage.removeItem("user-info");
     localStorage.removeItem("UserInfo");
-    localStorage.setItem("isLoggedIn", "false"); 
-    navigate ("/");
-};
-
+    localStorage.setItem("isLoggedIn", "false");
+    navigate("/");
+  };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -60,7 +59,28 @@ const Sidebar = () => {
               style={{ width: "150px" }}
             />
           </ListItem>
-          <ListItem button sx={{ marginBottom: "10px" }}>
+
+          <ListItem
+            button
+            component={Link}
+            to="/myprofile"
+            sx={{ marginBottom: "10px" }}
+          >
+            <ListItemIcon>
+              <img
+                src="./Images/home.png"
+                alt="Profile"
+                style={{ width: "26px" }}
+              />
+            </ListItemIcon>
+            <ListItemText primary="Home" />
+          </ListItem>
+          <ListItem
+            button
+            component={Link}
+            to="/homepage"
+            sx={{ marginBottom: "10px" }}
+          >
             <ListItemIcon>
               <img
                 src="./Images/home.png"
@@ -68,8 +88,9 @@ const Sidebar = () => {
                 style={{ width: "24px" }}
               />
             </ListItemIcon>
-            <ListItemText primary="Home" />
+            <ListItemText primary="Upload" />
           </ListItem>
+
           <ListItem button sx={{ marginBottom: "10px" }}>
             <ListItemIcon>
               <img
@@ -114,7 +135,7 @@ const Sidebar = () => {
           <ListItem
             button
             component={Link}
-            to="/myprofile"
+            to="/userprofile"
             sx={{ marginBottom: "10px" }}
           >
             <ListItemIcon>

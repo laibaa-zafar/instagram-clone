@@ -6,24 +6,15 @@ const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
   const navigate = useNavigate();
-  const isLoggedIn = useState();
-
-  // useEffect(() => {
-  //   const loggedIn = localStorage.getItem("isLoggedIn") === "true";
-  //   if (loggedIn) {
-  //     navigate("/homepage");
-  //   }
-  // }, [navigate]);
 
   useEffect(() => {
     const loggedIn = localStorage.getItem("isLoggedIn") === "true";
     if (loggedIn) {
       navigate("/homepage");
-    } else {
-      navigate("/");
     }
-  }, [isLoggedIn, navigate]);
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,6 +33,7 @@ const LoginForm = () => {
       }
       localStorage.setItem("user-info", JSON.stringify(data));
       localStorage.setItem("isLoggedIn", "true");
+      setIsLoggedIn(true); // Update isLoggedIn state
       setEmail("");
       setPassword("");
       setError("");
