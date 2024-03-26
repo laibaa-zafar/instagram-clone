@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import Sidebar from "../Sidebar/Sidebar";
 import { Card, Col, Row } from "react-bootstrap";
-import { FaHeart, FaComment } from "react-icons/fa";
+import { FaHeart, FaComment, FaRegHeart } from "react-icons/fa";
 
 const MyProfile = () => {
   const [data, setData] = useState([]);
@@ -36,17 +36,17 @@ const MyProfile = () => {
       console.log(commentsResult);
       setComments(commentsResult.comments);
 
-      // Fetching like status for each post
+      // Fetching like status
       let likeStatusPromises = postsResult.posts.map((post) => {
-        
         return fetch(
-    `http://localhost:8000/api/likeStatus?postid=${post.postid}&id=${userId}`
+          `http://localhost:8000/api/likeStatus?postid=${post.postid}&id=${userId}`
         ).then((response) => response.json());
       });
       
+
       let likeStatuses = await Promise.all(likeStatusPromises);
-      console.log(likeStatuses)
-      
+      console.log(likeStatuses);
+
       setData((prevData) =>
         prevData.map((post, index) => ({
           ...post,
@@ -54,9 +54,7 @@ const MyProfile = () => {
           totalLikes: likeStatuses[index].total_likes,
           totalUnlikes: likeStatuses[index].total_unlikes,
         }))
-      
       );
-      
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -80,47 +78,91 @@ const MyProfile = () => {
     fetchData();
   }, []);
 
-  const handleLike = async (postid) => {
+  const handleToggleLike = async (postid) => {
     try {
+      console.log("Starting toggle for post:", postid);
+  
+      // Check if the post is already liked
       if (likedPosts.includes(postid)) {
-        console.log("User has already liked the post.");
-        return;
-      }
-     
-      const likeStatusResponse = await fetch(
-        `http://localhost:8000/api/likeStatus?postid=${postid}&id=${userId}`
-      );
-      const likeStatusData = await likeStatusResponse.json();
-      if (likeStatusResponse.ok && likeStatusData.isLiked) {
-        console.log("User has already liked the post.");
-       
-        return;
-      }
+        console.log("Post is already liked. Unliking...");
   
-      const requestBody = {
-        username: username,
-        postid: postid
-      };
+        const response = await fetch(`http://localhost:8000/api/unlikePost`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: userId,
+            username: username,
+            postid: postid,
+          }),
+        });
   
-      const response = await likePost(requestBody);
-      if (response.ok) {
-        console.log("Liked post", postid);
-        const updatedLikedPosts = [...likedPosts, postid];
-        setLikedPosts(updatedLikedPosts);
-        localStorage.setItem(
-          `liked-posts-${userId}`,
-          JSON.stringify(updatedLikedPosts)
-        );
-        fetchData();
+        if (response.ok) {
+          console.log("Unliked post with ID:", postid);
+          setLikedPosts((prevLikedPosts) =>
+            prevLikedPosts.filter((id) => id !== postid)
+          );
+          localStorage.setItem(
+            `liked-posts-${userId}`,
+            JSON.stringify(likedPosts.filter((id) => id !== postid))
+          );
+          setData((prevData) =>
+            prevData.map((post) =>
+              post.postid === postid
+                ? {
+                    ...post,
+                    isLiked: false,
+                    totalLikes: post.totalLikes - 1,
+                  }
+                : post
+            )
+          );
+          fetchData();
+        } else {
+          console.error("Failed to unlike post.");
+        }
       } else {
-        const errorData = await response.json();
-        console.error("Failed to like post:", errorData.message);
+        console.log("Post is not liked. Liking...");
+  
+        // Like post
+        const requestBody = {
+          username: username,
+          postid: postid,
+        };
+  
+        const response = await likePost(requestBody);
+        if (response.ok) {
+          console.log("Liked post", postid);
+          const updatedLikedPosts = [...likedPosts, postid];
+          setLikedPosts(updatedLikedPosts);
+          localStorage.setItem(
+            `liked-posts-${userId}`,
+            JSON.stringify(updatedLikedPosts)
+          );
+          setData((prevData) =>
+            prevData.map((post) =>
+              post.postid === postid
+                ? {
+                    ...post,
+                    isLiked: true,
+                    totalLikes: post.totalLikes + 1,
+                  }
+                : post
+            )
+          );
+          fetchData();
+        } else {
+          const errorData = await response.json();
+          console.error("Failed to like post:", errorData.message);
+        }
       }
     } catch (error) {
-      console.error("Error liking post:", error);
+      console.error("Error toggling like:", error);
     }
   };
-
+  
+  
   const likePost = async (requestBody) => {
     try {
       const response = await fetch(`http://localhost:8000/api/likePost`, {
@@ -136,42 +178,7 @@ const MyProfile = () => {
       throw error;
     }
   };
-  const handleUnlike = async (postid) => {
-    try {
-      if (!likedPosts.includes(postid)) {
-        console.log("Post unliked");
-        return;
-      }
-  
-      const response = await fetch(`http://localhost:8000/api/unlikePost`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: userId,
-          username: username,
-          postid: postid,
-        }),
-      });
-  
-      if (response.ok) {
-        console.log("Unliked post with ID:", postid);
-        setLikedPosts((prevLikedPosts) =>
-          prevLikedPosts.filter((id) => id !== postid)
-        );
-        localStorage.setItem(
-          `liked-posts-${userId}`,
-          JSON.stringify(likedPosts.filter((id) => id !== postid))
-        );
-        fetchData();
-      } else {
-        console.error("Failed to unlike post.");
-      }
-    } catch (error) {
-      console.error("Error unliking post:", error);
-    }
-  };
+
   const handleComment = async (postid) => {
     try {
       const response = await fetch("http://localhost:8000/api/store", {
@@ -213,13 +220,14 @@ const MyProfile = () => {
             <Card.Title>{post.name}</Card.Title>
             <Card.Text>{post.description}</Card.Text>
             <Box display="flex" alignItems="center">
-              <IconButton onClick={() => handleLike(post.postid)}>
-                <FaHeart />
+              <IconButton onClick={() => handleToggleLike(post.postid)}>
+                {likedPosts.includes(post.postid) ? (
+                  <FaHeart />
+                ) : (
+                  <FaRegHeart />
+                )}
               </IconButton>
               <span>{post.totalLikes}</span>
-              <IconButton onClick={() => handleUnlike(post.postid)}>
-                <FaHeart />
-              </IconButton>
               <IconButton>
                 <FaComment />
               </IconButton>
@@ -246,10 +254,6 @@ const MyProfile = () => {
                 }
               }}
             />
-           {/* for displaying new contnet */}
-            {/* {newComment && (
-              <Typography variant="body2">{newComment}</Typography>
-            )} */}
             <Button
               variant="contained"
               fullWidth
@@ -262,7 +266,7 @@ const MyProfile = () => {
       </Col>
     ));
   };
-  
+
   return (
     <>
       <Sidebar />
@@ -284,7 +288,7 @@ const MyProfile = () => {
             This is a sample bio.
           </Typography> */}
           <Typography variant="h3" marginBottom={1}>
-           Home Page
+            Home Page
           </Typography>
           <Row>{renderPosts()}</Row>
         </Grid>

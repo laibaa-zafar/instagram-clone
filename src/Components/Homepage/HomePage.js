@@ -36,7 +36,6 @@ const HomePage = () => {
   
     return () => clearInterval(intervalId); 
   }, []);
-  
 
   const [imageUploaded, setImageUploaded] = useState(false);
   const [name, setName] = useState("");
@@ -60,16 +59,17 @@ const HomePage = () => {
     
     try {
       const storedUserInfo = localStorage.getItem('user-info');
-      if (!storedUserInfo) {
+      if (!storedUserInfo)
+      {
         console.error('User info not found in local storage');
         return;
-      }
+      } 
       const userInfo = JSON.parse(storedUserInfo);
       const formData = new FormData();
       formData.append("file_path", file);
       formData.append("name", name);
       formData.append("description", description);
-      formData.append("id", userInfo.id); // Include user ID in the form data
+      formData.append("id", userInfo.id);
   
       let result = await fetch("http://localhost:8000/api/addPost", {
         method: "POST",
@@ -82,10 +82,12 @@ const HomePage = () => {
         setFile("");
         setDescription("");
         setImageUploaded(false);
-      } else {
+      } 
+      else {
         console.error("Failed to save data:", result.statusText);
       }
-    } catch (error) {
+    } 
+    catch (error) {
       console.error("Error:", error);
       alert("Failed to save data. Please try again.");
     }
@@ -100,11 +102,12 @@ const HomePage = () => {
       console.log(result);
       if (result.ok) {
         alert("Post has been deleted");
-        setData(data.filter(post => post.id !== postId)); // Remove post from state
+        setData(data.filter(post => post.id !== postId)); 
       } else {
         console.error("Failed to delete post:", result.statusText);
       }
-    } catch (error) {
+    } 
+    catch (error) {
       console.error("Error:", error);
       alert("Failed to delete post. Please try again.");
     }
